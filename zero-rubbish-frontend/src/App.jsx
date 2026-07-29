@@ -28,6 +28,7 @@ export default function App() {
       <Route path="admin/login" element={<AdminLogin />} />
 
       {/* Protected admin routes — sidebar layout, JWT required */}
+      {/* Wrap the admin routes with a ProtectedRoute component to ensure that only authenticated users can access them */}
       <Route
         element={
           <ProtectedRoute>
