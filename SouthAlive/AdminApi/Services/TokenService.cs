@@ -10,7 +10,7 @@ using Microsoft.IdentityModel.Tokens;
 
 namespace AdminApi.Services
 {
-    public class TokenService
+    public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
     public TokenService(IConfiguration configuration)

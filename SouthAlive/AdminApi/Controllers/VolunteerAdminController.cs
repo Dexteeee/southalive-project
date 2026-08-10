@@ -1,0 +1,118 @@
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using NetTopologySuite.IO;
+using AdminApi.Data;
+using AdminApi.DTOs;
+using AdminApi.Models;
+
+namespace AdminApi.Controllers
+{
+    [ApiController]
+    [Route("api/admin/[controller]")]
+    [Authorize]
+    public class VolunteerAdminController : ControllerBase
+    {
+        private readonly ApplicationDbContext _context;
+        private readonly GeoJsonReader _geoJsonReader = new();
+
+        public VolunteerAdminController(ApplicationDbContext context)
+        {
+            _context = context;
+        }
+
+        // GET /api/admin/volunteeradmin
+        [HttpGet]
+        public async Task<ActionResult<IEnumerable<VolunteerDto>>> GetVolunteers([FromQuery] string? status)
+        {
+            var query = _context.Volunteers.AsQueryable();
+
+            if (!string.IsNullOrEmpty(status))
+            {
+                query = query.Where(v => v.Status.ToString() == status);
+            }
+
+            var volunteers = await query
+                .OrderBy(v => v.RegistrationDate) // oldest pending first
+                .Select(v => new VolunteerDto
+                {
+                    VolunteerId = v.VolunteerId,
+                    Name = v.Name,
+                    PhoneNo = v.PhoneNo,
+                    EmailAddress = v.EmailAddress,
+                    Status = v.Status.ToString(),
+                    RequestedAreaName = v.RequestedAreaName,
+                    RegistrationDate = v.RegistrationDate,
+                    ApprovedDate = v.ApprovedDate
+                })
+                .ToListAsync();
+
+            return Ok(volunteers);
+        }
+
+        // PATCH /api/admin/volunteeradmin/{id}/approve
+        [HttpPatch("{id}/approve")]
+        public async Task<ActionResult> ApproveVolunteer(int id, ApproveVolunteerDto dto)
+        {
+            var volunteer = await _context.Volunteers.FindAsync(id);
+            if (volunteer == null) return NotFound();
+            if (volunteer.Status != VolunteerStatus.Pending)
+                return BadRequest("Only pending registrations can be approved.");
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var geometry = _geoJsonReader.Read<NetTopologySuite.Geometries.Geometry>(dto.GeometryGeoJson);
+
+                var area = new Area
+                {
+                    AreaName = dto.AreaName,
+                    AreaType = dto.AreaType,
+                    Geom = geometry,
+                    CurrentStatus = "adopted"
+                };
+                _context.Areas.Add(area);
+                await _context.SaveChangesAsync(); // need AreaId before creating the Adoption
+
+                var adoption = new Adoption
+                {
+                    AreaId = area.AreaId,
+                    VolunteerId = volunteer.VolunteerId,
+                    StartDate = DateOnly.FromDateTime(DateTime.UtcNow),
+                    IsActive = true
+                };
+                _context.Adoptions.Add(adoption);
+
+                volunteer.Status = VolunteerStatus.Approved;
+                volunteer.ApprovedDate = DateOnly.FromDateTime(DateTime.UtcNow);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+
+
+                return Ok(new { message = "Volunteer approved and area created." });
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
+        }
+
+        // PATCH /api/admin/volunteeradmin/{id}/reject
+        [HttpPatch("{id}/reject")]
+        public async Task<ActionResult> RejectVolunteer(int id)
+        {
+            var volunteer = await _context.Volunteers.FindAsync(id);
+            if (volunteer == null) return NotFound();
+            if (volunteer.Status != VolunteerStatus.Pending)
+                return BadRequest("Only pending registrations can be rejected.");
+
+            volunteer.Status = VolunteerStatus.Rejected;
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Volunteer rejected." });
+        }
+    }
+}
