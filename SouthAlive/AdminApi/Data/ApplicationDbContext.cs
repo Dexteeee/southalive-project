@@ -50,6 +50,8 @@ namespace AdminApi.Data
                 entity.Property(v => v.EmailAddress)
                     .IsRequired()
                     .HasMaxLength(150);
+                entity.Property(v => v.Address)
+                    .HasMaxLength(250);
                 entity.Property(v => v.Status)
                     .HasConversion<string>()
                     .IsRequired();

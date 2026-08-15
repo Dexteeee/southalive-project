@@ -40,6 +40,7 @@ namespace AdminApi.Controllers
                     Name = v.Name,
                     PhoneNo = v.PhoneNo,
                     EmailAddress = v.EmailAddress,
+                    Address = v.Address,
                     Status = v.Status.ToString(),
                     RequestedAreaName = v.RequestedAreaName,
                     RegistrationDate = v.RegistrationDate,
@@ -114,5 +115,47 @@ namespace AdminApi.Controllers
 
             return Ok(new { message = "Volunteer rejected." });
         }
+
+        // PATCH /api/admin/volunteeradmin/{id}
+        [HttpPatch("{id}")]
+        public async Task<ActionResult> UpdateVolunteer(int id, UpdateVolunteerDto dto)
+        {
+            var volunteer = await _context.Volunteers.FindAsync(id);
+            if (volunteer == null) return NotFound();
+
+            if (!string.IsNullOrWhiteSpace(dto.Name)) volunteer.Name = dto.Name;
+            if (!string.IsNullOrWhiteSpace(dto.PhoneNo)) volunteer.PhoneNo = dto.PhoneNo;
+            if (!string.IsNullOrWhiteSpace(dto.EmailAddress)) volunteer.EmailAddress = dto.EmailAddress;
+            if (!string.IsNullOrWhiteSpace(dto.Address)) volunteer.Address = dto.Address;
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Volunteer updated." });
+        }
+
+        // DELETE /api/admin/volunteeradmin/{id}
+        [HttpDelete("{id}")]
+        public async Task<ActionResult> DeleteVolunteer(int id)
+        {
+            var volunteer = await _context.Volunteers
+                .Include(v => v.Adoptions)
+                .FirstOrDefaultAsync(v => v.VolunteerId == id);
+
+            if (volunteer == null) return NotFound();
+
+            if (volunteer.Adoptions.Any())
+            {
+                return BadRequest(new
+                {
+                    message = "Cannot delete a volunteer with adoption history. This volunteer was approved and has an associated area record."
+                });
+            }
+
+            _context.Volunteers.Remove(volunteer);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Volunteer deleted." });
+        }
     }
+
+
 }

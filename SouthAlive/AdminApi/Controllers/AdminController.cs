@@ -12,6 +12,7 @@ namespace AdminApi.Controllers
     public class AdminController : ControllerBase
     {
         [HttpGet("profile")]
+        [Authorize]
         public IActionResult GetProfile()
         {
             return Ok(new

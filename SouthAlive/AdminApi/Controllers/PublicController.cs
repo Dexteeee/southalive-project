@@ -57,6 +57,7 @@ namespace AdminApi.Controllers
                 Name = dto.Name,
                 PhoneNo = dto.PhoneNo,
                 EmailAddress = dto.EmailAddress,
+                Address = dto.Address,
                 RequestedAreaName = dto.RequestedAreaName,
                 Status = VolunteerStatus.Pending,
                 RegistrationDate = DateOnly.FromDateTime(DateTime.UtcNow)
