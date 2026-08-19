@@ -33,7 +33,7 @@ namespace AdminApi.Controllers
             }
 
             var volunteers = await query
-                .OrderBy(v => v.RegistrationDate) // oldest pending first
+                .OrderBy(v => v.RegistrationDate)
                 .Select(v => new VolunteerDto
                 {
                     VolunteerId = v.VolunteerId,
@@ -73,7 +73,7 @@ namespace AdminApi.Controllers
                     CurrentStatus = "adopted"
                 };
                 _context.Areas.Add(area);
-                await _context.SaveChangesAsync(); // need AreaId before creating the Adoption
+                await _context.SaveChangesAsync();
 
                 var adoption = new Adoption
                 {
@@ -90,7 +90,7 @@ namespace AdminApi.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-
+                // TODO: volunteer confirmation email — deferred, see IEmailService (not wired up yet)
 
                 return Ok(new { message = "Volunteer approved and area created." });
             }
@@ -156,6 +156,4 @@ namespace AdminApi.Controllers
             return Ok(new { message = "Volunteer deleted." });
         }
     }
-
-
 }

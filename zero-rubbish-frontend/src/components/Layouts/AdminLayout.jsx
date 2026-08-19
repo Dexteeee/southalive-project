@@ -4,8 +4,8 @@ import { useAuth } from '../../context/AuthContext.jsx';
 // Define the navigation items for the admin layout sidebar
 const NAV_ITEMS = [
     { to: '/admin/dashboard', label: 'Dashboard' },
-    { to: '/admin/volunteers', label: 'Volunteers & adoptions' },
-    { to: '/admin/streets', label: 'Streets' },
+    { to: '/admin/volunteers', label: 'Volunteers Registration' },
+    { to: '/admin/streets', label: 'Adopted Streets' },
 ];
 
 export default function AdminLayout() {
@@ -16,7 +16,7 @@ export default function AdminLayout() {
             {/* Sidebar */}
             <aside className="w-60 shrink-0 border-r border-line bg-white flex flex-col">
                 <div className="px-5 py-5 border-b border-line">
-                    <p className="font-display font-semibold text-ink">Zero Rubbish Street Adoption System</p>
+                    <p className="font-display font-semibold text-ink">South Alive_Zero Rubbish Street Adoption System</p>
                     <p className="text-xs text-ink/50">Coordinator dashboard</p>
                 </div>
 

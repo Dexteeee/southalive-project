@@ -1,9 +1,9 @@
 export const mockAreas = [
     {
-        area_id: 1,
-        area_name: "Maitland St, Martin St (Elles to Princess)",
-        area_type: "zone",
-        current_status: "adopted",
+        areaId: 1,
+        areaName: "Maitland St, Martin St (Elles to Princess)",
+        areaType: "zone",
+        currentStatus: "adopted",
         geometry: {
             type: "Polygon",
             coordinates: [[
@@ -16,10 +16,10 @@ export const mockAreas = [
         },
     },
     {
-        area_id: 2,
-        area_name: "Bain Park",
-        area_type: "zone",
-        current_status: "adopted",
+        areaId: 2,
+        areaName: "Bain Park",
+        areaType: "zone",
+        currentStatus: "adopted",
         geometry: {
             type: "Polygon",
             coordinates: [
@@ -34,10 +34,10 @@ export const mockAreas = [
         },
     },
     {
-        area_id: 3,
-        area_name: "Scott St (Elles to McQuarrie)",
-        area_type: "street",
-        current_status: "adopted",
+        areaId: 3,
+        areaName: "Scott St (Elles to McQuarrie)",
+        areaType: "street",
+        currentStatus: "adopted",
         geometry: {
             type: "LineString",
             coordinates: [

@@ -5,20 +5,20 @@ import { getAreas } from "../services/api";
 const ADOPTED_COLOR = "#0EA5E9"; // brand green
 
 // Anchored near Strathern / Bain Park, south Invercargill
-const SOUTH_INVERCARGILL_CENTER = [-46.4317, 168.3601];
+const SOUTH_INVERCARGILL_CENTER = [-46.4273, 168.3602];
 
 function Legend() {
     return (
-        <div className="absolute bottom-4 left-4 z-[1000] bg-white rounded-lg shadow-md px-4 py-3 text-sm w-max max-w-[220px]">
-            <p className="font-semibold text-gray-800 mb-2">South Alive - Zero Rubbish Programme</p>
-            <div className="flex items-center gap-2">
-                <span
-                    className="inline-block w-8 h-1 rounded shrink-0"
-                    style={{ backgroundColor: ADOPTED_COLOR }}
-                />
-                <span className="text-gray-600"> Streets / Zones that have been adopted</span>
-            </div>
-        </div>
+       <div className="absolute bottom-4 left-4 z-[1000] bg-white rounded-lg shadow-md px-4 py-3 text-sm w-max max-w-[220px]">
+    <p className="font-semibold text-gray-800 mb-2 bg-white">South Alive - Zero Rubbish Programme</p>
+    <div className="flex items-center gap-2 bg-white">
+        <span
+            className="inline-block w-8 h-1 rounded shrink-0"
+            style={{ backgroundColor: ADOPTED_COLOR }}
+        />
+        <span className="text-gray-600">Streets / Zones that have been adopted</span>
+    </div>
+</div>
     );
 }
 
@@ -33,7 +33,9 @@ export default function EmbedMap() {
 
         getAreas()
             .then((data) => {
-                const adopted = data.filter((a) => a.current_status === "adopted");
+                // Backend already filters to adopted-only, but keep this
+                // as a defensive check in case that ever changes.
+                const adopted = data.filter((a) => a.currentStatus === "adopted");
                 if (!cancelled) setAreas(adopted);
             })
             .catch(() => {
@@ -49,7 +51,7 @@ export default function EmbedMap() {
     }, []);
 
     const styleFeature = (feature) => {
-        const isZone = feature.properties.area_type === "zone";
+        const isZone = feature.properties.areaType === "zone";
         return {
             color: ADOPTED_COLOR,
             weight: isZone ? 3 : 5,
@@ -59,8 +61,8 @@ export default function EmbedMap() {
     };
 
     const onEachFeature = (feature, layer) => {
-        const { area_name } = feature.properties;
-        layer.bindPopup(`<strong>${area_name}</strong><br/>Status: Adopted ✅`);
+        const { areaName } = feature.properties;
+        layer.bindPopup(`<strong>${areaName}</strong><br/>Status: Adopted ✅`);
     };
 
     const geoJsonData = {
@@ -69,9 +71,9 @@ export default function EmbedMap() {
             type: "Feature",
             geometry: a.geometry,
             properties: {
-                area_id: a.area_id,
-                area_name: a.area_name,
-                area_type: a.area_type,
+                areaId: a.areaId,
+                areaName: a.areaName,
+                areaType: a.areaType,
             },
         })),
     };

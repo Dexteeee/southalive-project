@@ -20,7 +20,6 @@ namespace AdminApi.Controllers
         }
 
         // GET /api/public/areas
-        // Only returns adopted areas — no PII, matches Bellevue-style pattern
         [HttpGet("areas")]
         public async Task<ActionResult<IEnumerable<AreaDto>>> GetAdoptedAreas()
         {
@@ -65,6 +64,8 @@ namespace AdminApi.Controllers
 
             _context.Volunteers.Add(volunteer);
             await _context.SaveChangesAsync();
+
+            // TODO: admin alert email — deferred, see IEmailService (not wired up yet)
 
             return Ok(new { message = "Registration submitted. You'll be notified once reviewed." });
         }

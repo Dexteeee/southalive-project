@@ -3,6 +3,10 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 // Layouts
 import AdminLayout from './components/Layouts/AdminLayout.jsx';
 
+import HomeView from './pages/HomeView.jsx';
+
+
+
 // Embed (public, bare — no nav/footer, iframed into WordPress)
 import EmbedMap from './pages/EmbedMap.jsx';
 import EmbedAdopt from './pages/EmbedAdopt.jsx';
@@ -20,6 +24,8 @@ import ProtectedRoute from './components/ProtectedRoute.jsx';
 export default function App() {
   return (
     <Routes>
+      {/* Public home page */}
+      <Route path="/" element={<HomeView />} />
       {/* Bare embed routes — no layout, these get iframed into WordPress */}
       <Route path="embed/map" element={<EmbedMap />} />
       <Route path="embed/adopt" element={<EmbedAdopt />} />

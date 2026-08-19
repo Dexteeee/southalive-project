@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using NetTopologySuite.IO;
 using AdminApi.Data;
 using AdminApi.DTOs;
+using AdminApi.Models;
 
 namespace AdminApi.Controllers
 {
@@ -48,6 +49,70 @@ namespace AdminApi.Controllers
             });
 
             return Ok(result);
+        }
+
+        // GET /api/admin/areas/{areaId}/updates
+        [HttpGet("{areaId}/updates")]
+        public async Task<ActionResult<IEnumerable<AdoptionUpdateDto>>> GetUpdates(int areaId)
+        {
+            var updates = await _context.AdoptionUpdates
+                .Where(u => u.Adoption.AreaId == areaId)
+                .OrderByDescending(u => u.LogYear)
+                .Select(u => new AdoptionUpdateDto
+                {
+                    UpdateId = u.UpdateId,
+                    AdoptionId = u.AdoptionId,
+                    LogYear = u.LogYear,
+                    Notes = u.Notes
+                })
+                .ToListAsync();
+
+            return Ok(updates);
+        }
+
+        // POST /api/admin/areas/{areaId}/updates
+        [HttpPost("{areaId}/updates")]
+        public async Task<ActionResult> AddUpdate(int areaId, CreateAdoptionUpdateDto dto)
+        {
+            var activeAdoption = await _context.Adoptions
+                .FirstOrDefaultAsync(a => a.AreaId == areaId && a.IsActive);
+
+            if (activeAdoption == null)
+                return BadRequest("No active adoption found for this area.");
+
+            var update = new AdoptionUpdate
+            {
+                AdoptionId = activeAdoption.AdoptionId,
+                LogYear = dto.LogYear,
+                Notes = dto.Notes
+            };
+            _context.AdoptionUpdates.Add(update);
+            await _context.SaveChangesAsync();
+
+            return Ok(new { message = "Update logged." });
+        }
+
+
+        // PATCH /api/admin/areas/{id}/end-adoption
+        [HttpPatch("{id}/end-adoption")]
+        public async Task<ActionResult> EndAdoption(int id)
+        {
+            var area = await _context.Areas
+                .Include(a => a.Adoptions.Where(ad => ad.IsActive))
+                .FirstOrDefaultAsync(a => a.AreaId == id);
+
+            if (area == null) return NotFound();
+
+            var activeAdoption = area.Adoptions.FirstOrDefault(ad => ad.IsActive);
+            if (activeAdoption == null)
+                return BadRequest("This area has no active adoption to end.");
+
+            activeAdoption.IsActive = false;
+            activeAdoption.EndDate = DateOnly.FromDateTime(DateTime.UtcNow);
+            area.CurrentStatus = "available";
+
+            await _context.SaveChangesAsync();
+            return Ok(new { message = "Adoption ended. Area is now available for re-adoption." });
         }
     }
 }

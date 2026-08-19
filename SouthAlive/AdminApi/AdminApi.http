@@ -24,9 +24,9 @@ POST {{AdminApi_HostAddress}}/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "admin1",
-  "email": "admin1@southalive.org.nz",
-  "password": "ChangeThisPassword123!",
+  "username": "admin",
+  "email": "admin@southalive.org.nz",
+  "password": "admin12345",
   "role": "Admin"
 }
 
@@ -37,29 +37,27 @@ POST {{AdminApi_HostAddress}}/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "admin1",
-  "password": "ChangeThisPassword123!"
+  "username": "admin",
+  "password": "admin12345"
 }
 
 ###
 
 ### 5. Get all volunteers (admin, requires auth token from step 4)
 GET {{AdminApi_HostAddress}}/api/admin/volunteeradmin
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW4xIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoiYWRtaW4xQHNvdXRoYWxpdmUub3JnLm56IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3ODYzMzM0MjMsImlzcyI6IkFkbWluQXBpIiwiYXVkIjoiQWRtaW5BcGlVc2VycyJ9.4OyrEIuDHOR2IrQKa01PgZH2Szt3xWQmNzKdIPrVacs
-Accept: application/json
+Authorization: Bearer 
 
 ###
 
 ### 6. Get only pending volunteers
 GET {{AdminApi_HostAddress}}/api/admin/volunteeradmin?status=Pending
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW4xIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoiYWRtaW4xQHNvdXRoYWxpdmUub3JnLm56IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3ODYzMzM0MjMsImlzcyI6IkFkbWluQXBpIiwiYXVkIjoiQWRtaW5BcGlVc2VycyJ9.4OyrEIuDHOR2IrQKa01PgZH2Szt3xWQmNzKdIPrVacs
-Accept: application/json
+Authorization: Bearer 
 
 ###
 
 ### 7. Approve a volunteer (replace {id} with the actual volunteer_id from step 2/6)
 PATCH {{AdminApi_HostAddress}}/api/admin/volunteeradmin/4/approve
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW4xIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoiYWRtaW4xQHNvdXRoYWxpdmUub3JnLm56IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3ODYzMzM0MjMsImlzcyI6IkFkbWluQXBpIiwiYXVkIjoiQWRtaW5BcGlVc2VycyJ9.4OyrEIuDHOR2IrQKa01PgZH2Szt3xWQmNzKdIPrVacs
+Authorization: Bearer 
 
 Content-Type: application/json
 
@@ -73,7 +71,6 @@ Content-Type: application/json
 
 ### 8. Reject a volunteer (use a different pending volunteer's id)
 PATCH {{AdminApi_HostAddress}}/api/admin/volunteeradmin/4/reject
-Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjEiLCJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1lIjoiYWRtaW4xIiwiaHR0cDovL3NjaGVtYXMueG1sc29hcC5vcmcvd3MvMjAwNS8wNS9pZGVudGl0eS9jbGFpbXMvZW1haWxhZGRyZXNzIjoiYWRtaW4xQHNvdXRoYWxpdmUub3JnLm56IiwiaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS93cy8yMDA4LzA2L2lkZW50aXR5L2NsYWltcy9yb2xlIjoiQWRtaW4iLCJleHAiOjE3ODYzMzM0MjMsImlzcyI6IkFkbWluQXBpIiwiYXVkIjoiQWRtaW5BcGlVc2VycyJ9.4OyrEIuDHOR2IrQKa01PgZH2Szt3xWQmNzKdIPrVacs
-
+Authorization: Bearer 
 
 ###
