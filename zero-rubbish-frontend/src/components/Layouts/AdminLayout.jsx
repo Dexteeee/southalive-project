@@ -5,7 +5,7 @@ import { useAuth } from '../../context/AuthContext.jsx';
 const NAV_ITEMS = [
     { to: '/admin/dashboard', label: 'Dashboard' },
     { to: '/admin/volunteers', label: 'Volunteers Registration' },
-    { to: '/admin/streets', label: 'Adopted Streets' },
+    { to: '/admin/streets', label: 'Streets Adoptions' },
 ];
 
 export default function AdminLayout() {

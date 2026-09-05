@@ -109,3 +109,8 @@ export async function endAdoption(areaId) {
     const res = await api.patch(`/admin/areas/${areaId}/end-adoption`);
     return res.data;
 }
+
+export async function getEndedAdoptions() {
+    const res = await api.get("/admin/areas/ended");
+    return res.data;
+}

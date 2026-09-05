@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { getAdminAreas, endAdoption } from "../services/api";
+import { getAdminAreas, getEndedAdoptions, endAdoption } from "../services/api";
 import AdoptionUpdatesModal from "../components/AdoptionUpdatesModal";
 
 const TYPE_LABELS = {
@@ -7,7 +7,13 @@ const TYPE_LABELS = {
     zone: "Zone",
 };
 
+const TABS = [
+    { key: "active", label: "Active" },
+    { key: "ended", label: "Ended" },
+];
+
 export default function StreetsView() {
+    const [tab, setTab] = useState("active");
     const [areas, setAreas] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -17,11 +23,12 @@ export default function StreetsView() {
     const loadAreas = useCallback(() => {
         setLoading(true);
         setError(null);
-        getAdminAreas()
+        const fetcher = tab === "active" ? getAdminAreas : getEndedAdoptions;
+        fetcher()
             .then(setAreas)
-            .catch(() => setError("Unable to load streets and zones."))
+            .catch(() => setError("Unable to load adoptions."))
             .finally(() => setLoading(false));
-    }, []);
+    }, [tab]);
 
     useEffect(() => {
         loadAreas();
@@ -48,9 +55,25 @@ export default function StreetsView() {
 
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-display font-semibold mb-6 text-ink">
+            <h1 className="text-2xl font-display font-semibold mb-4 text-ink">
                 Streets &amp; Zones
             </h1>
+
+            <div className="flex gap-2 mb-4">
+                {TABS.map((t) => (
+                    <button
+                        key={t.key}
+                        onClick={() => setTab(t.key)}
+                        className={`text-sm px-3 py-1.5 rounded-full border ${
+                            tab === t.key
+                                ? "bg-ink text-white border-ink"
+                                : "border-line text-ink/60 hover:bg-paper"
+                        }`}
+                    >
+                        {t.label}
+                    </button>
+                ))}
+            </div>
 
             {actionError && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
@@ -65,7 +88,9 @@ export default function StreetsView() {
                 <div className="bg-white border border-line rounded-md overflow-hidden">
                     {areas.length === 0 ? (
                         <p className="p-6 text-sm text-ink/50">
-                            No adopted areas yet. Approve a volunteer registration to create one.
+                            {tab === "active"
+                                ? "No active adoptions yet. Approve a volunteer registration to create one."
+                                : "No ended adoptions yet."}
                         </p>
                     ) : (
                         <table className="w-full text-sm">
@@ -74,29 +99,37 @@ export default function StreetsView() {
                                     <th className="px-4 py-2 font-medium">Area name</th>
                                     <th className="px-4 py-2 font-medium">Type</th>
                                     <th className="px-4 py-2 font-medium">Status</th>
-                                    <th className="px-4 py-2 font-medium">Adopted by</th>
+                                    <th className="px-4 py-2 font-medium">Volunteer</th>
                                     <th className="px-4 py-2 font-medium">Since</th>
+                                    {tab === "ended" && (
+                                        <th className="px-4 py-2 font-medium">Finished</th>
+                                    )}
                                     <th className="px-4 py-2 font-medium text-right">Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                {areas.map((a) => (
-                                    <tr key={a.areaId} className="border-b border-line last:border-0">
+                                {areas.map((a, i) => (
+                                    <tr key={`${a.areaId}-${i}`} className="border-b border-line last:border-0">
                                         <td className="px-4 py-3">{a.areaName}</td>
                                         <td className="px-4 py-3 text-ink/70">
                                             {TYPE_LABELS[a.areaType] || a.areaType}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <span
-                                                className="text-xs font-medium px-2 py-0.5 rounded-full"
-                                                style={{
-                                                    backgroundColor:
-                                                        a.currentStatus === "adopted" ? "#07C16020" : "#94A3B820",
-                                                    color: a.currentStatus === "adopted" ? "#07C160" : "#64748B",
-                                                }}
-                                            >
-                                                {a.currentStatus}
-                                            </span>
+                                            {tab === "active" ? (
+                                                <span
+                                                    className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                                    style={{ backgroundColor: "#07C16020", color: "#07C160" }}
+                                                >
+                                                    Adopted
+                                                </span>
+                                            ) : (
+                                                <span
+                                                    className="text-xs font-medium px-2 py-0.5 rounded-full"
+                                                    style={{ backgroundColor: "#94A3B820", color: "#64748B" }}
+                                                >
+                                                    Ended
+                                                </span>
+                                            )}
                                         </td>
                                         <td className="px-4 py-3">
                                             {a.volunteerName ? (
@@ -109,10 +142,13 @@ export default function StreetsView() {
                                             )}
                                         </td>
                                         <td className="px-4 py-3 text-ink/60">
-                                            {a.startDate
-                                                ? new Date(a.startDate).toLocaleDateString()
-                                                : "—"}
+                                            {a.startDate ? new Date(a.startDate).toLocaleDateString() : "—"}
                                         </td>
+                                        {tab === "ended" && (
+                                            <td className="px-4 py-3 text-ink/60">
+                                                {a.endDate ? new Date(a.endDate).toLocaleDateString() : "—"}
+                                            </td>
+                                        )}
                                         <td className="px-4 py-3">
                                             <div className="flex justify-end gap-2 flex-wrap">
                                                 <button
@@ -121,7 +157,7 @@ export default function StreetsView() {
                                                 >
                                                     View log
                                                 </button>
-                                                {a.currentStatus === "adopted" && (
+                                                {tab === "active" && (
                                                     <button
                                                         className="text-xs px-2 py-1 rounded-sm border border-red-200 text-red-600"
                                                         onClick={() => handleEndAdoption(a)}

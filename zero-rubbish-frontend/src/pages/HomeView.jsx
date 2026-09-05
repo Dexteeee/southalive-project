@@ -7,12 +7,7 @@ const links = [
         to: "/embed/map",
         color: "#07C160",
     },
-    {
-        title: "Adopt a Street",
-        description: "Public registration form for volunteers to sign up.",
-        to: "/embed/adopt",
-        color: "#FFD401",
-    },
+    
     {
         title: "Coordinator Login",
         description: "Admin dashboard for reviewing and managing registrations.",
@@ -34,7 +29,7 @@ export default function HomeView() {
                     and care for local streets and public spaces.
                 </p>
 
-                <div className="grid gap-4 sm:grid-cols-3">
+                <div className="grid gap-4 sm:grid-cols-2">
                     {links.map((link) => (
                         <a
                             key={link.to}

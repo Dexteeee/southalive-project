@@ -61,7 +61,7 @@ export default function EmbedAdopt() {
 
     return (
         <form onSubmit={handleSubmit} className="max-w-sm mx-auto mt-6 space-y-3 px-4 text-sm">
-            <h2 className="text-lg font-semibold">Adopt-a-Street Application Form</h2>
+            <h2 className="text-lg font-semibold">Adopt-a-Street Registration Form</h2>
 
             {error && (
                 <p className="text-xs text-red-600 bg-red-50 border border-red-200 rounded px-2 py-1.5">
@@ -105,7 +105,7 @@ export default function EmbedAdopt() {
                 className="w-full py-1.5 rounded font-medium text-sm disabled:opacity-50"
                 style={{ backgroundColor: "#FFD401", color: "#1F2937" }}
             >
-                {submitting ? "Submitting…" : "Submit request"}
+                {submitting ? "Submitting…" : "SUBMIT"}
             </button>
         </form>
     );

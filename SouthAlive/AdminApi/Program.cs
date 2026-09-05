@@ -18,6 +18,7 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
         o => o.UseNetTopologySuite()
     ));
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 
 // JWT Authentication configuration
 var jwtKey = builder.Configuration["Jwt:Key"]!;

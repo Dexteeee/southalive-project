@@ -5,6 +5,8 @@ using AdminApi.Data;
 using AdminApi.DTOs;
 using AdminApi.Models;
 
+
+
 namespace AdminApi.Controllers
 {
     [ApiController]
@@ -12,11 +14,15 @@ namespace AdminApi.Controllers
     public class PublicController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<PublicController> _logger;
         private readonly GeoJsonWriter _geoJsonWriter = new();
 
-        public PublicController(ApplicationDbContext context)
+        public PublicController(ApplicationDbContext context, IEmailService emailService, ILogger<PublicController> logger)
         {
             _context = context;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         // GET /api/public/areas
@@ -65,9 +71,19 @@ namespace AdminApi.Controllers
             _context.Volunteers.Add(volunteer);
             await _context.SaveChangesAsync();
 
-            // TODO: admin alert email — deferred, see IEmailService (not wired up yet)
+            try
+            {
+                await _emailService.SendNewRegistrationAlertAsync(volunteer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send registration alert email for volunteer {VolunteerId}", volunteer.VolunteerId);
+                // Don't rethrow — registration already succeeded and should still return 200 even if the email fails
+            }
 
             return Ok(new { message = "Registration submitted. You'll be notified once reviewed." });
+
         }
+
     }
 }

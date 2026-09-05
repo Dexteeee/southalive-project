@@ -250,12 +250,14 @@ export default function VolunteersView() {
                                                 >
                                                     Edit
                                                 </button>
+                                                {v.status !== "Approved" && (
                                                 <button
                                                     className="text-xs px-2 py-1 rounded-sm border border-red-200 text-red-600"
                                                     onClick={() => handleDelete(v.volunteerId)}
                                                 >
                                                     Delete
                                                 </button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

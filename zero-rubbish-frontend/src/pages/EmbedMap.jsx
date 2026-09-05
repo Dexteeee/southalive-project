@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { getAreas } from "../services/api";
 
-const ADOPTED_COLOR = "#0EA5E9"; // brand green
+const ADOPTED_COLOR = "#0EA5E9"; 
 
 // Anchored near Strathern / Bain Park, south Invercargill
 const SOUTH_INVERCARGILL_CENTER = [-46.4273, 168.3602];
@@ -21,6 +21,19 @@ function Legend() {
 </div>
     );
 }
+  function AdoptButton() {
+       return(
+        <a
+            href='/embed/adopt'
+            target='_blank'
+            rel='noopener noreferrer'
+            className="absolute top-4 right-4 z-[1000] px-4 py-2 rounded-lg shadow-md text-sm font-semibold hover:opacity-90 transition-opacity"
+            style={{ backgroundColor: "#FFD401", color: "#1C2B26" }}
+        >
+           Click to adopt a street or zone
+        </a>
+    );
+  }
 
 export default function EmbedMap() {
     const mapRef = useRef(null);
@@ -33,8 +46,6 @@ export default function EmbedMap() {
 
         getAreas()
             .then((data) => {
-                // Backend already filters to adopted-only, but keep this
-                // as a defensive check in case that ever changes.
                 const adopted = data.filter((a) => a.currentStatus === "adopted");
                 if (!cancelled) setAreas(adopted);
             })
@@ -93,17 +104,18 @@ export default function EmbedMap() {
         return (
             <div
                 className="flex items-center justify-center text-red-500"
-                style={{ height: "600px" }}
+                style={{ height: "700px" }}
             >
                 {error}
             </div>
         );
     }
 
+  
     return (
         <div
             className="relative w-full rounded-lg overflow-hidden shadow"
-            style={{ height: "600px" }}
+            style={{ height: "900px" }}
         >
             <MapContainer
                 center={SOUTH_INVERCARGILL_CENTER}
@@ -126,6 +138,7 @@ export default function EmbedMap() {
                 />
             </MapContainer>
             <Legend />
+            <AdoptButton />
         </div>
     );
 }

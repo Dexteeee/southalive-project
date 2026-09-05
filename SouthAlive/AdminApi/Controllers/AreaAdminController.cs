@@ -26,6 +26,7 @@ namespace AdminApi.Controllers
         public async Task<ActionResult<IEnumerable<AreaAdminDto>>> GetAreas()
         {
             var areas = await _context.Areas
+                .Where(a => a.CurrentStatus == "adopted")
                 .Include(a => a.Adoptions.Where(ad => ad.IsActive))
                     .ThenInclude(ad => ad.Volunteer)
                 .ToListAsync();
@@ -46,6 +47,34 @@ namespace AdminApi.Controllers
                     VolunteerEmail = activeAdoption?.Volunteer?.EmailAddress,
                     StartDate = activeAdoption?.StartDate
                 };
+            });
+
+            return Ok(result);
+        }
+// GET /api/admin/areas/ended
+        [HttpGet("ended")]
+        public async Task<ActionResult<IEnumerable<AreaAdminDto>>> GetEndedAdoptions()
+        {
+            var endedAdoptions = await _context.Adoptions
+                .Where(ad => !ad.IsActive)
+                .Include(ad => ad.Area)
+                .Include(ad => ad.Volunteer)
+                .OrderByDescending(ad => ad.EndDate)
+                .ToListAsync();
+
+            var result = endedAdoptions.Select(ad => new AreaAdminDto
+            {
+                AreaId = ad.Area.AreaId,
+                AreaName = ad.Area.AreaName,
+                AreaType = ad.Area.AreaType,
+                CurrentStatus = ad.Area.CurrentStatus,
+                Geometry = System.Text.Json.JsonSerializer.Deserialize<object>(
+                    _geoJsonWriter.Write(ad.Area.Geom))!,
+                VolunteerId = ad.VolunteerId,
+                VolunteerName = ad.Volunteer.Name,
+                VolunteerEmail = ad.Volunteer.EmailAddress,
+                StartDate = ad.StartDate,
+                EndDate = ad.EndDate
             });
 
             return Ok(result);

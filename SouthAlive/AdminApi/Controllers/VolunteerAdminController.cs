@@ -14,12 +14,17 @@ namespace AdminApi.Controllers
     public class VolunteerAdminController : ControllerBase
     {
         private readonly ApplicationDbContext _context;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<VolunteerAdminController> _logger;
         private readonly GeoJsonReader _geoJsonReader = new();
 
-        public VolunteerAdminController(ApplicationDbContext context)
+        public VolunteerAdminController(ApplicationDbContext context, IEmailService emailService, ILogger<VolunteerAdminController> logger)
         {
             _context = context;
+            _emailService = emailService;
+            _logger = logger;
         }
+        
 
         // GET /api/admin/volunteeradmin
         [HttpGet]
@@ -90,8 +95,15 @@ namespace AdminApi.Controllers
                 await _context.SaveChangesAsync();
                 await transaction.CommitAsync();
 
-                // TODO: volunteer confirmation email — deferred, see IEmailService (not wired up yet)
-
+                try
+                {
+                    await _emailService.SendApprovalConfirmationAsync(volunteer, area);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to send approval confirmation email for volunteer {VolunteerId}", volunteer.VolunteerId);
+                    // Don't rethrow — approval already succeeded and should still return 200 even if the email fails
+                }
                 return Ok(new { message = "Volunteer approved and area created." });
             }
             catch
