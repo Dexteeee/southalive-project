@@ -24,8 +24,8 @@ POST {{AdminApi_HostAddress}}/api/auth/register
 Content-Type: application/json
 
 {
-  "username": "admin",
-  "email": "admin@southalive.org.nz",
+  "username": "admin001",
+  "email": "admin001@southalive.org.nz",
   "password": "password12345",
   "role": "Admin"
 }
@@ -37,8 +37,8 @@ POST {{AdminApi_HostAddress}}/api/auth/login
 Content-Type: application/json
 
 {
-  "username": "admin",
-  "password": "admin12345"
+  "username": "admin001",
+  "password": "password12345"
 }
 
 ###

@@ -81,6 +81,16 @@ namespace AdminApi.Controllers
                 // Don't rethrow — registration already succeeded and should still return 200 even if the email fails
             }
 
+            try
+            {
+                await _emailService.SendRegistrationReceivedAsync(volunteer);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to send registration confirmation email for volunteer {VolunteerId}", volunteer.VolunteerId);
+                // Don't rethrow — registration already succeeded and should still return 200 even if the email fails
+            }
+
             return Ok(new { message = "Registration submitted. You'll be notified once reviewed." });
 
         }
