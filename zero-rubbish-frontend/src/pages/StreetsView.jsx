@@ -8,8 +8,8 @@ const TYPE_LABELS = {
 };
 
 const TABS = [
-    { key: "active", label: "Active" },
-    { key: "ended", label: "Ended" },
+    { key: "active", label: "Active Adoptions" },
+    { key: "ended", label: "Ended Adoptions" },
 ];
 
 export default function StreetsView() {
@@ -155,7 +155,7 @@ export default function StreetsView() {
                                                     className="text-xs px-2 py-1 rounded-sm border border-line"
                                                     onClick={() => setUpdatesArea(a)}
                                                 >
-                                                    View log
+                                                    View/Update log
                                                 </button>
                                                 {tab === "active" && (
                                                     <button

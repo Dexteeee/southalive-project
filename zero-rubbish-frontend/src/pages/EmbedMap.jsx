@@ -27,7 +27,7 @@ function Legend() {
             href='/embed/adopt'
             target='_blank'
             rel='noopener noreferrer'
-            className="absolute top-4 right-4 z-[1000] px-4 py-2 rounded-lg shadow-md text-sm font-semibold hover:opacity-90 transition-opacity"
+            className="absolute top-6 right-4 z-[1000] flex items-center gap-2 px-5 py-3 rounded-full shadow-lg text-sm font-bold hover:shadow-xl hover:scale-105 active:scale-100 transition-all border-1 border-white"
             style={{ backgroundColor: "#FFD401", color: "#1C2B26" }}
         >
            Click to adopt a street or zone
@@ -73,7 +73,7 @@ export default function EmbedMap() {
 
     const onEachFeature = (feature, layer) => {
         const { areaName } = feature.properties;
-        layer.bindPopup(`<strong>${areaName}</strong><br/>Status: Adopted ✅`);
+        layer.bindPopup(`<strong>${areaName}</strong>`);
     };
 
     const geoJsonData = {
@@ -93,7 +93,7 @@ export default function EmbedMap() {
         return (
             <div
                 className="flex items-center justify-center text-gray-500"
-                style={{ height: "600px" }}
+                style={{ height: "100vh" }}
             >
                 Loading map…
             </div>
@@ -104,7 +104,7 @@ export default function EmbedMap() {
         return (
             <div
                 className="flex items-center justify-center text-red-500"
-                style={{ height: "700px" }}
+                style={{ height: "100vh" }}
             >
                 {error}
             </div>
@@ -114,8 +114,7 @@ export default function EmbedMap() {
   
     return (
         <div
-            className="relative w-full rounded-lg overflow-hidden shadow"
-            style={{ height: "900px" }}
+            className="relative w-full h-screen rounded-lg overflow-hidden shadow"
         >
             <MapContainer
                 center={SOUTH_INVERCARGILL_CENTER}
