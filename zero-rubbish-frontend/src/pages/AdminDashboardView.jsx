@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { getVolunteers, getAdminAreas } from "../services/api";
+import usePageTitle from "../hooks/usePageTitle";
 
 function StatCard({ label, value, color, to }) {
     const content = (
@@ -15,6 +16,8 @@ function StatCard({ label, value, color, to }) {
 }
 
 export default function AdminDashboardView() {
+    usePageTitle("Dashboard | Zero Rubbish Admin");
+
     const [volunteers, setVolunteers] = useState([]);
     const [areas, setAreas] = useState([]);
     const [loading, setLoading] = useState(true);

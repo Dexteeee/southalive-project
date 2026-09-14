@@ -57,6 +57,18 @@ namespace AdminApi.Controllers
                 return BadRequest("Name, email, and requested area are required.");
             }
 
+            if (!string.IsNullOrWhiteSpace(dto.GeometryGeoJson))
+            {
+                try
+                {
+                    new GeoJsonReader().Read<NetTopologySuite.Geometries.Geometry>(dto.GeometryGeoJson);
+                }
+                catch
+                {
+                    return BadRequest("The submitted location could not be read. Please try drawing or selecting it again.");
+                }
+            }
+
             var volunteer = new Volunteer
             {
                 Name = dto.Name,
@@ -64,6 +76,8 @@ namespace AdminApi.Controllers
                 EmailAddress = dto.EmailAddress,
                 Address = dto.Address,
                 RequestedAreaName = dto.RequestedAreaName,
+                RequestedAreaType = string.IsNullOrWhiteSpace(dto.AreaType) ? "street" : dto.AreaType,
+                RequestedGeometryGeoJson = dto.GeometryGeoJson,
                 Status = VolunteerStatus.Pending,
                 RegistrationDate = DateOnly.FromDateTime(DateTime.UtcNow)
             };

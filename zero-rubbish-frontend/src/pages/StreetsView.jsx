@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { getAdminAreas, getEndedAdoptions, endAdoption } from "../services/api";
 import AdoptionUpdatesModal from "../components/AdoptionUpdatesModal";
+import usePageTitle from "../hooks/usePageTitle";
 
 const TYPE_LABELS = {
     street: "Street",
@@ -13,6 +14,8 @@ const TABS = [
 ];
 
 export default function StreetsView() {
+    usePageTitle("Streets & Zones | Zero Rubbish Admin");
+
     const [tab, setTab] = useState("active");
     const [areas, setAreas] = useState([]);
     const [loading, setLoading] = useState(true);

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import usePageTitle from "../hooks/usePageTitle";
 
 const links = [
     {
@@ -17,6 +18,8 @@ const links = [
 ];
 
 export default function HomeView() {
+    usePageTitle("Zero Rubbish Street Adoption System");
+
     return (
         <div className="min-h-screen bg-paper px-6 py-12">
             <div className="max-w-3xl mx-auto">

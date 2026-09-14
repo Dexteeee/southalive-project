@@ -2,8 +2,11 @@ import { useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { login as loginApi } from '../services/api';
+import usePageTitle from '../hooks/usePageTitle';
 
 export default function AdminLogin() {
+    usePageTitle('Coordinator Login | Zero Rubbish');
+
     const { login } = useAuth();
 
     const navigate = useNavigate();

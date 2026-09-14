@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { MapContainer, TileLayer, GeoJSON } from "react-leaflet";
 import { getAreas } from "../services/api";
+import usePageTitle from "../hooks/usePageTitle";
+import { LocateControl } from "../components/LeafletDrawTools";
 
 const ADOPTED_COLOR = "#0EA5E9"; 
 
@@ -36,6 +38,8 @@ function Legend() {
   }
 
 export default function EmbedMap() {
+    usePageTitle("Street Adoption Map | Zero Rubbish");
+
     const mapRef = useRef(null);
     const [areas, setAreas] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -135,6 +139,7 @@ export default function EmbedMap() {
                     style={styleFeature}
                     onEachFeature={onEachFeature}
                 />
+                <LocateControl position="topleft" />
             </MapContainer>
             <Legend />
             <AdoptButton />

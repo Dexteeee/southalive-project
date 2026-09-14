@@ -9,6 +9,8 @@ namespace AdminApi.DTOs
         public string? Address { get; set; }
         public string Status { get; set; } = string.Empty;
         public string RequestedAreaName { get; set; } = string.Empty;
+        public string RequestedAreaType { get; set; } = string.Empty;
+        public string? RequestedGeometryGeoJson { get; set; }
         public DateOnly RegistrationDate { get; set; }
         public DateOnly? ApprovedDate { get; set; }
     }

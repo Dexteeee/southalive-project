@@ -1,4 +1,8 @@
+import usePageTitle from "../hooks/usePageTitle";
+
 export default function NotFound() {
+    usePageTitle("Page Not Found | Zero Rubbish");
+
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-paper text-ink">
             <h1 className="text-6xl font-display mb-4">404</h1>

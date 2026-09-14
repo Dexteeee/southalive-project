@@ -16,6 +16,8 @@ namespace AdminApi.Models
         public string? Address { get; set; }
         public VolunteerStatus Status { get; set; } = VolunteerStatus.Pending;
         public string RequestedAreaName { get; set; } = string.Empty;
+        public string RequestedAreaType { get; set; } = "street"; // "street" or "zone"
+        public string? RequestedGeometryGeoJson { get; set; } // raw GeoJSON from the volunteer's own map drawing or street search, if provided
         public DateOnly RegistrationDate { get; set; }
         public DateOnly? ApprovedDate { get; set; }
 

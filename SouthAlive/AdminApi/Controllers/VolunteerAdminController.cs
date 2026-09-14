@@ -48,6 +48,8 @@ namespace AdminApi.Controllers
                     Address = v.Address,
                     Status = v.Status.ToString(),
                     RequestedAreaName = v.RequestedAreaName,
+                    RequestedAreaType = v.RequestedAreaType,
+                    RequestedGeometryGeoJson = v.RequestedGeometryGeoJson,
                     RegistrationDate = v.RegistrationDate,
                     ApprovedDate = v.ApprovedDate
                 })

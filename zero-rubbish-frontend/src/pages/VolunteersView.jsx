@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
 import { getVolunteers, updateVolunteer, rejectVolunteer, deleteVolunteer } from "../services/api";
 import ApproveVolunteerModal from "../components/ApproveVolunteerModal";
+import usePageTitle from "../hooks/usePageTitle";
 
 const STATUS_OPTIONS = ["All", "Pending", "Approved", "Rejected"];
 
@@ -109,6 +110,8 @@ function EditModal({ volunteer, onClose, onSaved }) {
 }
 
 export default function VolunteersView() {
+    usePageTitle("Volunteers | Zero Rubbish Admin");
+
     const [searchParams, setSearchParams] = useSearchParams();
     const statusFilter = searchParams.get("status") || "All";
 
@@ -218,7 +221,12 @@ export default function VolunteersView() {
                                             <div>{v.emailAddress}</div>
                                             <div className="text-xs text-ink/50">{v.phoneNo}</div>
                                         </td>
-                                        <td className="px-4 py-3">{v.requestedAreaName}</td>
+                                        <td className="px-4 py-3">
+                                            <div>{v.requestedAreaName}</div>
+                                            {v.requestedGeometryGeoJson && (
+                                                <div className="text-xs text-green-700">✓ Location provided</div>
+                                            )}
+                                        </td>
                                         <td className="px-4 py-3">
                                             <StatusBadge status={v.status} />
                                         </td>
