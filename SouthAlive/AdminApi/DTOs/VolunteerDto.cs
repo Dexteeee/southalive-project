@@ -13,5 +13,6 @@ namespace AdminApi.DTOs
         public string? RequestedGeometryGeoJson { get; set; }
         public DateOnly RegistrationDate { get; set; }
         public DateOnly? ApprovedDate { get; set; }
+        public bool HasActiveAdoption { get; set; } // true if an approved volunteer's street adoption hasn't been ended yet
     }
 }

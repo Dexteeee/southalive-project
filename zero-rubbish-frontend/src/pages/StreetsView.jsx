@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { getAdminAreas, getEndedAdoptions, endAdoption } from "../services/api";
 import AdoptionUpdatesModal from "../components/AdoptionUpdatesModal";
 import usePageTitle from "../hooks/usePageTitle";
@@ -99,9 +100,9 @@ export default function StreetsView() {
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="text-left text-ink/50 border-b border-line bg-paper">
+                                    <th className="px-4 py-2 font-medium">#</th>
                                     <th className="px-4 py-2 font-medium">Area name</th>
                                     <th className="px-4 py-2 font-medium">Type</th>
-                                    <th className="px-4 py-2 font-medium">Status</th>
                                     <th className="px-4 py-2 font-medium">Volunteer</th>
                                     <th className="px-4 py-2 font-medium">Since</th>
                                     {tab === "ended" && (
@@ -113,33 +114,20 @@ export default function StreetsView() {
                             <tbody>
                                 {areas.map((a, i) => (
                                     <tr key={`${a.areaId}-${i}`} className="border-b border-line last:border-0">
+                                        <td className="px-4 py-3 text-ink/50">{i + 1}</td>
                                         <td className="px-4 py-3">{a.areaName}</td>
                                         <td className="px-4 py-3 text-ink/70">
                                             {TYPE_LABELS[a.areaType] || a.areaType}
                                         </td>
                                         <td className="px-4 py-3">
-                                            {tab === "active" ? (
-                                                <span
-                                                    className="text-xs font-medium px-2 py-0.5 rounded-full"
-                                                    style={{ backgroundColor: "#07C16020", color: "#07C160" }}
-                                                >
-                                                    Adopted
-                                                </span>
-                                            ) : (
-                                                <span
-                                                    className="text-xs font-medium px-2 py-0.5 rounded-full"
-                                                    style={{ backgroundColor: "#94A3B820", color: "#64748B" }}
-                                                >
-                                                    Ended
-                                                </span>
-                                            )}
-                                        </td>
-                                        <td className="px-4 py-3">
                                             {a.volunteerName ? (
-                                                <div>
-                                                    <div>{a.volunteerName}</div>
+                                                <Link
+                                                    to={`/admin/volunteers?volunteerId=${a.volunteerId}`}
+                                                    className="hover:underline"
+                                                >
+                                                    <div className="text-adopted">{a.volunteerName}</div>
                                                     <div className="text-xs text-ink/50">{a.volunteerEmail}</div>
-                                                </div>
+                                                </Link>
                                             ) : (
                                                 <span className="text-ink/40">—</span>
                                             )}

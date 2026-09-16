@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { useSearchParams } from "react-router-dom";
-import { getVolunteers, updateVolunteer, rejectVolunteer, deleteVolunteer } from "../services/api";
+import { getVolunteers, updateVolunteer, rejectVolunteer, deleteVolunteer, forceDeleteVolunteer } from "../services/api";
 import ApproveVolunteerModal from "../components/ApproveVolunteerModal";
 import usePageTitle from "../hooks/usePageTitle";
 
@@ -10,7 +10,16 @@ const STATUS_COLORS = {
     Pending: "#F2994A",
     Approved: "#07C160",
     Rejected: "#94A3B8",
+    Active: "#07C160",
+    Ended: "#64748B",
 };
+
+// Approved volunteers show as "Active" or "Ended" depending on whether their
+// street adoption is still ongoing, rather than the static "Approved" status.
+function displayStatus(volunteer) {
+    if (volunteer.status !== "Approved") return volunteer.status;
+    return volunteer.hasActiveAdoption ? "Active" : "Ended";
+}
 
 function StatusBadge({ status }) {
     return (
@@ -114,6 +123,7 @@ export default function VolunteersView() {
 
     const [searchParams, setSearchParams] = useSearchParams();
     const statusFilter = searchParams.get("status") || "All";
+    const volunteerIdFilter = searchParams.get("volunteerId");
 
     const [volunteers, setVolunteers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -169,9 +179,30 @@ export default function VolunteersView() {
         }
     };
 
+    const handleForceDelete = async (id, name) => {
+        if (
+            !window.confirm(
+                `Permanently delete ${name}'s record and their ended adoption history? This cannot be undone — use it for test data or mistaken registrations, not adoptions you want a record of.`
+            )
+        )
+            return;
+        setActionError(null);
+        try {
+            await forceDeleteVolunteer(id);
+            loadVolunteers();
+        } catch (err) {
+            const message = err.response?.data?.message || "Failed to delete volunteer.";
+            setActionError(message);
+        }
+    };
+
+    const visibleVolunteers = volunteerIdFilter
+        ? volunteers.filter((v) => String(v.volunteerId) === volunteerIdFilter)
+        : volunteers;
+
     return (
         <div className="p-6">
-            <h1 className="text-2xl font-display font-semibold mb-6 text-ink">Volunteers</h1>
+            <h1 className="text-2xl font-display font-semibold mb-6 text-ink">Volunteers Registration</h1>
 
             <div className="flex gap-2 mb-4">
                 {STATUS_OPTIONS.map((s) => (
@@ -188,6 +219,22 @@ export default function VolunteersView() {
                 ))}
             </div>
 
+            {volunteerIdFilter && (
+                <p className="text-sm text-ink/60 mb-4">
+                    Showing only volunteer #{volunteerIdFilter}.{" "}
+                    <button
+                        className="underline hover:text-ink"
+                        onClick={() => {
+                            const next = new URLSearchParams(searchParams);
+                            next.delete("volunteerId");
+                            setSearchParams(next);
+                        }}
+                    >
+                        Clear filter
+                    </button>
+                </p>
+            )}
+
             {actionError && (
                 <p className="text-sm text-red-600 bg-red-50 border border-red-200 rounded px-3 py-2 mb-4">
                     {actionError}
@@ -199,12 +246,13 @@ export default function VolunteersView() {
 
             {!loading && !error && (
                 <div className="bg-white border border-line rounded-md overflow-hidden">
-                    {volunteers.length === 0 ? (
+                    {visibleVolunteers.length === 0 ? (
                         <p className="p-6 text-sm text-ink/50">No volunteers match this filter.</p>
                     ) : (
                         <table className="w-full text-sm">
                             <thead>
                                 <tr className="text-left text-ink/50 border-b border-line bg-paper">
+                                    <th className="px-4 py-2 font-medium">#</th>
                                     <th className="px-4 py-2 font-medium">Name</th>
                                     <th className="px-4 py-2 font-medium">Contact</th>
                                     <th className="px-4 py-2 font-medium">Requested area</th>
@@ -214,8 +262,9 @@ export default function VolunteersView() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {volunteers.map((v) => (
+                                {visibleVolunteers.map((v, i) => (
                                     <tr key={v.volunteerId} className="border-b border-line last:border-0">
+                                        <td className="px-4 py-3 text-ink/50">{i + 1}</td>
                                         <td className="px-4 py-3">{v.name}</td>
                                         <td className="px-4 py-3 text-ink/70">
                                             <div>{v.emailAddress}</div>
@@ -228,7 +277,7 @@ export default function VolunteersView() {
                                             )}
                                         </td>
                                         <td className="px-4 py-3">
-                                            <StatusBadge status={v.status} />
+                                            <StatusBadge status={displayStatus(v)} />
                                         </td>
                                         <td className="px-4 py-3 text-ink/60">
                                             {new Date(v.registrationDate).toLocaleDateString()}
@@ -264,6 +313,15 @@ export default function VolunteersView() {
                                                     onClick={() => handleDelete(v.volunteerId)}
                                                 >
                                                     Delete
+                                                </button>
+                                                )}
+                                                {v.status === "Approved" && !v.hasActiveAdoption && (
+                                                <button
+                                                    className="text-xs px-2 py-1 rounded-sm border border-red-300 text-red-700 font-medium"
+                                                    onClick={() => handleForceDelete(v.volunteerId, v.name)}
+                                                    title="Permanently deletes this volunteer and their ended adoption history"
+                                                >
+                                                    Force delete
                                                 </button>
                                                 )}
                                             </div>

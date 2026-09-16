@@ -86,6 +86,13 @@ export async function deleteVolunteer(id) {
     return res.data;
 }
 
+// Permanently deletes a volunteer along with their adoption history. Only allowed once
+// every adoption they had has ended — use for cleaning up test data / mistakes.
+export async function forceDeleteVolunteer(id) {
+    const res = await api.delete(`/admin/volunteeradmin/${id}/force`);
+    return res.data;
+}
+
 // ---------- Admin: Areas ----------
 
 export async function getAdminAreas() {

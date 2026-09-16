@@ -18,6 +18,8 @@ public class EmailService : IEmailService
 
     public async Task SendNewRegistrationAlertAsync(Volunteer volunteer)
     {
+        var dashboardUrl = $"{_config["Frontend:BaseUrl"]?.TrimEnd('/')}/admin/dashboard";
+
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(_config["Email:FromName"], _config["Email:FromAddress"]));
         message.To.Add(MailboxAddress.Parse(_config["Email:AdminAlertAddress"]));
@@ -34,7 +36,7 @@ public class EmailService : IEmailService
                     <li><strong>Email:</strong> {volunteer.EmailAddress}</li>
                     <li><strong>Requested Area:</strong> {volunteer.RequestedAreaName}</li>
                 </ul>
-                <p>Log in to the admin dashboard to review and approve.</p>"
+                <p>Log in to the <a href=""{dashboardUrl}"">admin dashboard</a> to review and approve.</p>"
         };
 
         await SendAsync(message);

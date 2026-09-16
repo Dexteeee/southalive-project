@@ -14,6 +14,31 @@ L.Icon.Default.mergeOptions({
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
+// Combines every layer currently in the feature group back into one geometry. A single
+// layer (the normal case) passes through as-is; multiple layers — e.g. a street loaded as
+// several separate OSM way segments — are merged into one Multi* geometry rather than
+// silently dropping every layer but the first when the admin edits or deletes one.
+function combineLayersToGeometry(layers) {
+    if (layers.length === 0) return null;
+    if (layers.length === 1) return layers[0].toGeoJSON().geometry;
+
+    const geometries = layers.map((l) => l.toGeoJSON().geometry);
+    const sameType = geometries.every((g) => g.type === geometries[0].type);
+
+    if (sameType && geometries[0].type === "LineString") {
+        return { type: "MultiLineString", coordinates: geometries.map((g) => g.coordinates) };
+    }
+    if (sameType && geometries[0].type === "Polygon") {
+        return { type: "MultiPolygon", coordinates: geometries.map((g) => g.coordinates) };
+    }
+    return { type: "GeometryCollection", geometries };
+}
+
+// Darker/higher-contrast than Leaflet.draw's pale default blue, so a drawn street or
+// zone stands out clearly against the map tiles.
+const DRAWN_LINE_COLOR = "#0B3D91";
+const DRAWN_LINE_WEIGHT = 5;
+
 // Lets someone draw a street (line) or zone (polygon) on the map, optionally starting
 // from a geometry that was already captured elsewhere (e.g. a volunteer's own submission).
 export function DrawControl({ areaType, onGeometryChange, initialGeometry }) {
@@ -27,7 +52,9 @@ export function DrawControl({ areaType, onGeometryChange, initialGeometry }) {
         featureGroupRef.current = featureGroup;
 
         if (initialGeometry) {
-            const initialLayer = L.geoJSON(initialGeometry);
+            const initialLayer = L.geoJSON(initialGeometry, {
+                style: { color: DRAWN_LINE_COLOR, weight: DRAWN_LINE_WEIGHT },
+            });
             initialLayer.eachLayer((layer) => featureGroup.addLayer(layer));
             if (featureGroup.getLayers().length > 0) {
                 const bounds = featureGroup.getBounds();
@@ -42,8 +69,12 @@ export function DrawControl({ areaType, onGeometryChange, initialGeometry }) {
                 circle: false,
                 circlemarker: false,
                 marker: false,
-                polyline: areaType === "street",
-                polygon: areaType === "zone",
+                polyline: areaType === "street"
+                    ? { shapeOptions: { color: DRAWN_LINE_COLOR, weight: DRAWN_LINE_WEIGHT } }
+                    : false,
+                polygon: areaType === "zone"
+                    ? { shapeOptions: { color: DRAWN_LINE_COLOR, weight: DRAWN_LINE_WEIGHT, fillOpacity: 0.2 } }
+                    : false,
             },
             edit: {
                 featureGroup,
@@ -59,13 +90,10 @@ export function DrawControl({ areaType, onGeometryChange, initialGeometry }) {
             onGeometryChange(e.layer.toGeoJSON().geometry);
         };
         const handleEdited = () => {
-            const layers = featureGroup.getLayers();
-            if (layers.length > 0) {
-                onGeometryChange(layers[0].toGeoJSON().geometry);
-            }
+            onGeometryChange(combineLayersToGeometry(featureGroup.getLayers()));
         };
         const handleDeleted = () => {
-            onGeometryChange(null);
+            onGeometryChange(combineLayersToGeometry(featureGroup.getLayers()));
         };
 
         map.on(L.Draw.Event.CREATED, handleCreated);
@@ -199,9 +227,64 @@ export function MapFlyTo({ position, radius }) {
     return null;
 }
 
+// Nominatim's /search only returns one OSM "way" per result, which is often just one
+// segment of a street (roads are frequently split at intersections). This queries the
+// Overpass API for every way sharing that name near the matched point and combines them
+// into a single geometry, so a text-selected street comes pre-drawn along its full length
+// instead of a single short segment.
+const OVERPASS_SEARCH_RADIUS_METERS = 3000;
+const OVERPASS_TIMEOUT_MS = 8000;
+// Overpass's main instance rate-limits/blocks aggressively; try a mirror before giving up.
+const OVERPASS_ENDPOINTS = [
+    "https://overpass-api.de/api/interpreter",
+    "https://overpass.kumi.systems/api/interpreter",
+];
+
+async function queryOverpass(endpoint, query) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), OVERPASS_TIMEOUT_MS);
+    try {
+        const response = await fetch(endpoint, {
+            method: "POST",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: `data=${encodeURIComponent(query)}`,
+            signal: controller.signal,
+        });
+        if (!response.ok) return null;
+        return await response.json();
+    } catch {
+        return null;
+    } finally {
+        clearTimeout(timeout);
+    }
+}
+
+async function fetchWholeStreetGeometry(name, [lat, lon]) {
+    const safeName = name.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    const query = `[out:json][timeout:15];way["name"="${safeName}"]["highway"](around:${OVERPASS_SEARCH_RADIUS_METERS},${lat},${lon});out geom;`;
+
+    let data = null;
+    for (const endpoint of OVERPASS_ENDPOINTS) {
+        data = await queryOverpass(endpoint, query);
+        if (data) break;
+    }
+    if (!data) return null;
+
+    const ways = (data.elements || []).filter(
+        (el) => el.type === "way" && Array.isArray(el.geometry) && el.geometry.length > 1
+    );
+    if (!ways.length) return null;
+
+    const coordinates = ways.map((way) => way.geometry.map((pt) => [pt.lon, pt.lat]));
+    return coordinates.length === 1
+        ? { type: "LineString", coordinates: coordinates[0] }
+        : { type: "MultiLineString", coordinates };
+}
+
 // Search box backed by Nominatim, scoped to Invercargill. Optionally requests each
 // result's OSM way geometry (polygon_geojson=1) so a street can be selected without
-// anyone having to draw it by hand.
+// anyone having to draw it by hand — and, via Overpass, the street's *whole* length
+// rather than just the single segment Nominatim matched.
 const MIN_LIVE_SEARCH_LENGTH = 3;
 const LIVE_SEARCH_DEBOUNCE_MS = 400;
 
@@ -210,6 +293,7 @@ export function StreetSearch({ onSelect, placeholder = "Search for a street in I
     const [results, setResults] = useState([]);
     const [searching, setSearching] = useState(false);
     const [showResults, setShowResults] = useState(false);
+    const [resolvingGeometry, setResolvingGeometry] = useState(false);
     const debounceRef = useRef(null);
     const requestIdRef = useRef(0);
 
@@ -267,16 +351,27 @@ export function StreetSearch({ onSelect, placeholder = "Search for a street in I
         debounceRef.current = setTimeout(() => runSearch(value), LIVE_SEARCH_DEBOUNCE_MS);
     };
 
-    const handleSelect = (result) => {
+    const handleSelect = async (result) => {
         const label = result.display_name.split(",")[0];
-        onSelect({
-            position: [parseFloat(result.lat), parseFloat(result.lon)],
-            label,
-            geometry: result.geojson || null,
-        });
+        const position = [parseFloat(result.lat), parseFloat(result.lon)];
         setQuery(label);
         setShowResults(false);
         if (debounceRef.current) clearTimeout(debounceRef.current);
+
+        let geometry = result.geojson || null;
+        if (includeGeometry) {
+            setResolvingGeometry(true);
+            try {
+                const wholeStreet = await fetchWholeStreetGeometry(label, position);
+                if (wholeStreet) geometry = wholeStreet;
+            } catch {
+                // Overpass failed/timed out — fall back to Nominatim's single-segment geometry.
+            } finally {
+                setResolvingGeometry(false);
+            }
+        }
+
+        onSelect({ position, label, geometry });
     };
 
     return (
@@ -318,6 +413,10 @@ export function StreetSearch({ onSelect, placeholder = "Search for a street in I
 
             {showResults && !searching && results.length === 0 && (
                 <p className="text-xs text-ink/50 mt-1">No results found. Try a different search.</p>
+            )}
+
+            {resolvingGeometry && (
+                <p className="text-xs text-ink/50 mt-1">Fetching the full street shape…</p>
             )}
         </div>
     );

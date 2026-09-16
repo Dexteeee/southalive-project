@@ -52,9 +52,11 @@ namespace AdminApi.Controllers
         {
             if (string.IsNullOrWhiteSpace(dto.Name) ||
                 string.IsNullOrWhiteSpace(dto.EmailAddress) ||
+                string.IsNullOrWhiteSpace(dto.PhoneNo) ||
+                string.IsNullOrWhiteSpace(dto.Address) ||
                 string.IsNullOrWhiteSpace(dto.RequestedAreaName))
             {
-                return BadRequest("Name, email, and requested area are required.");
+                return BadRequest("Name, email, phone, address, and requested area are required.");
             }
 
             if (!string.IsNullOrWhiteSpace(dto.GeometryGeoJson))

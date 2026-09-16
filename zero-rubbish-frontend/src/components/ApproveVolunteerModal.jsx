@@ -57,10 +57,10 @@ export default function ApproveVolunteerModal({ volunteer, onClose, onApproved }
         <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 px-4">
             <div className="bg-white rounded-md p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
                 <h3 className="text-lg font-display font-semibold mb-1">Approve volunteer</h3>
-                <p className="text-sm text-ink/60 mb-4">
+                <p className="text-sm text-red-500 mb-4 ">
                     {initialGeometry
-                        ? `${volunteer.name} already submitted a location below — adjust it if needed, then confirm.`
-                        : `Draw the street or zone ${volunteer.name} is adopting, then confirm.`}
+                        ? `New applicant ${volunteer.name} already submitted a location below — adjust it if needed, then confirm.`
+                        : `Draw the street or zone >${volunteer.name} is adopting, then confirm.`}
                 </p>
 
                 {error && (
@@ -100,7 +100,7 @@ export default function ApproveVolunteerModal({ volunteer, onClose, onApproved }
                 </div>
 
                 <p className="text-xs text-ink/50 mb-2">
-                    Use the drawing tools on the map (top-left) to draw a{" "}
+                    Use the drawing tools on the map to draw a{" "}
                     {areaType === "zone" ? "polygon" : "line"} for this{" "}
                     {areaType === "zone" ? "zone" : "street"}.
                 </p>

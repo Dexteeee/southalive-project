@@ -38,7 +38,8 @@ namespace AdminApi.Controllers
             }
 
             var volunteers = await query
-                .OrderBy(v => v.RegistrationDate)
+                .OrderByDescending(v => v.RegistrationDate)
+                .ThenByDescending(v => v.VolunteerId)
                 .Select(v => new VolunteerDto
                 {
                     VolunteerId = v.VolunteerId,
@@ -51,7 +52,8 @@ namespace AdminApi.Controllers
                     RequestedAreaType = v.RequestedAreaType,
                     RequestedGeometryGeoJson = v.RequestedGeometryGeoJson,
                     RegistrationDate = v.RegistrationDate,
-                    ApprovedDate = v.ApprovedDate
+                    ApprovedDate = v.ApprovedDate,
+                    HasActiveAdoption = v.Adoptions.Any(a => a.IsActive)
                 })
                 .ToListAsync();
 
@@ -168,6 +170,45 @@ namespace AdminApi.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Volunteer deleted." });
+        }
+
+        // DELETE /api/admin/volunteeradmin/{id}/force
+        // Permanently removes a volunteer along with their adoption history — only once every
+        // adoption they had has already ended. Used for cleaning up test data / mistaken
+        // registrations without disturbing anyone whose street is still actively adopted.
+        [HttpDelete("{id}/force")]
+        public async Task<ActionResult> ForceDeleteVolunteer(int id)
+        {
+            var volunteer = await _context.Volunteers
+                .Include(v => v.Adoptions)
+                .FirstOrDefaultAsync(v => v.VolunteerId == id);
+
+            if (volunteer == null) return NotFound();
+
+            if (volunteer.Adoptions.Any(a => a.IsActive))
+            {
+                return BadRequest(new
+                {
+                    message = "This volunteer has an active street adoption. End the adoption first, then delete."
+                });
+            }
+
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                // AdoptionUpdates cascade-delete automatically via the FK configuration.
+                _context.Adoptions.RemoveRange(volunteer.Adoptions);
+                _context.Volunteers.Remove(volunteer);
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return Ok(new { message = "Volunteer and their adoption history permanently deleted." });
+            }
+            catch
+            {
+                await transaction.RollbackAsync();
+                throw;
+            }
         }
     }
 }
