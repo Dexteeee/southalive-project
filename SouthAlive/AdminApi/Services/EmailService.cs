@@ -18,7 +18,7 @@ public class EmailService : IEmailService
 
     public async Task SendNewRegistrationAlertAsync(Volunteer volunteer)
     {
-        var dashboardUrl = $"{_config["Frontend:BaseUrl"]?.TrimEnd('/')}/admin/dashboard";
+        var dashboardUrl = "http://localhost:5173/admin/login";
 
         var message = new MimeMessage();
         message.From.Add(new MailboxAddress(_config["Email:FromName"], _config["Email:FromAddress"]));
@@ -28,7 +28,7 @@ public class EmailService : IEmailService
         message.Body = new TextPart("html")
         {
             Text = $@"
-                <p>Hi Claire,</p>
+                <p>Hi,</p>
                 <p>A new volunteer has just registered:</p>
                 <ul>
                     <li><strong>Name:</strong> {volunteer.Name}</li>

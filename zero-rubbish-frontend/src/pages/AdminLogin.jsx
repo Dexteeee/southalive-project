@@ -35,7 +35,7 @@ export default function AdminLogin() {
         } catch (err) {
             const message =
                 err.response?.status === 401
-                    ? 'Invalid username or password.'
+                    ? 'Invalid username or password, please try again.'
                     : err.message || 'Login failed. Please try again.';
             setError(message);
         } finally {
@@ -48,18 +48,20 @@ export default function AdminLogin() {
             <div className="w-full max-w-sm bg-white border border-line rounded-md p-8">
 
                 <div className="mb-6">
-                    <p className="text-xs text-ink/50 uppercase tracking-widest mb-1">South Alive</p>
+                    <p className="text-xs text-ink/50 uppercase tracking-widest mb-1">South Alive - Zero Rubbish Street Adoption System</p>
                     <h1 className="text-xl font-display font-semibold text-ink">Coordinator login</h1>
                 </div>
 
-                <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+                <form onSubmit={handleSubmit} className="flex flex-col gap-4" autoComplete="on">
                     <div className="flex flex-col gap-1">
                         <label htmlFor="username" className="text-sm font-medium text-ink">
                             Username
                         </label>
                         <input
                             id="username"
+                            name="username"
                             type="text"
+                            autoComplete="username"
                             value={username}
                             onChange={(e) => setUsername(e.target.value)}
                             placeholder="username"
@@ -74,7 +76,9 @@ export default function AdminLogin() {
                         </label>
                         <input
                             id="password"
+                            name="password"
                             type="password"
+                            autoComplete="current-password"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             placeholder="••••••••"

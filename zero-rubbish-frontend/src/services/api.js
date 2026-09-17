@@ -16,11 +16,15 @@ api.interceptors.request.use((config) => {
     return config;
 });
 
-// If a request comes back 401 (expired/invalid token), clear it and bounce to login
+// If a request comes back 401 (expired/invalid token), clear it and bounce to login.
+// Skip this for the login request itself — a wrong username/password is an expected
+// 401 there, not an expired session, and should be handled inline by the login form
+// instead of hard-reloading the page out from under it.
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
+        const isLoginRequest = error.config?.url?.includes("/auth/login");
+        if (error.response?.status === 401 && !isLoginRequest) {
             localStorage.removeItem("zr_admin_token");
             window.location.href = "/admin/login";
         }

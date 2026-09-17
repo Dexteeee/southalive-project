@@ -144,6 +144,7 @@ export default function EmbedAdopt() {
         setAreaType("street");
         setGeometry(null);
         setPickedLocation(null);
+        setForm((prev) => ({ ...prev, street: "" }));
     };
 
     const handleAreaTypeChange = (value) => {
@@ -465,7 +466,7 @@ export default function EmbedAdopt() {
 
                         {form.street && (
                             <p className="text-xs text-gray-600">
-                                Selected: <strong>{form.street}</strong>
+                                Current location: <strong>{form.street}</strong>
                             </p>
                         )}
 
@@ -532,7 +533,7 @@ export default function EmbedAdopt() {
                         )}
 
                         {geometry && (
-                            <p className="text-xs text-green-700">✓ Location found.</p>
+                            <p className="text-xs text-green-700">✓ Location found, ready to submit.</p>
                         )}
                     </div>
                 )}

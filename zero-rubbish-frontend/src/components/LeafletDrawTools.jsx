@@ -14,10 +14,7 @@ L.Icon.Default.mergeOptions({
     shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// Combines every layer currently in the feature group back into one geometry. A single
-// layer (the normal case) passes through as-is; multiple layers — e.g. a street loaded as
-// several separate OSM way segments — are merged into one Multi* geometry rather than
-// silently dropping every layer but the first when the admin edits or deletes one.
+
 function combineLayersToGeometry(layers) {
     if (layers.length === 0) return null;
     if (layers.length === 1) return layers[0].toGeoJSON().geometry;
@@ -34,9 +31,7 @@ function combineLayersToGeometry(layers) {
     return { type: "GeometryCollection", geometries };
 }
 
-// Darker/higher-contrast than Leaflet.draw's pale default blue, so a drawn street or
-// zone stands out clearly against the map tiles.
-const DRAWN_LINE_COLOR = "#0B3D91";
+const DRAWN_LINE_COLOR = "#031cfc";
 const DRAWN_LINE_WEIGHT = 5;
 
 // Lets someone draw a street (line) or zone (polygon) on the map, optionally starting
@@ -233,8 +228,9 @@ export function MapFlyTo({ position, radius }) {
 // into a single geometry, so a text-selected street comes pre-drawn along its full length
 // instead of a single short segment.
 const OVERPASS_SEARCH_RADIUS_METERS = 3000;
-const OVERPASS_TIMEOUT_MS = 8000;
-// Overpass's main instance rate-limits/blocks aggressively; try a mirror before giving up.
+const OVERPASS_TIMEOUT_MS = 6000;
+// Overpass's main instance rate-limits/blocks aggressively; race a mirror in parallel
+// instead of trying them one after another, so a blocked/slow instance doesn't double the wait.
 const OVERPASS_ENDPOINTS = [
     "https://overpass-api.de/api/interpreter",
     "https://overpass.kumi.systems/api/interpreter",
@@ -259,15 +255,27 @@ async function queryOverpass(endpoint, query) {
     }
 }
 
+// Resolves with the first non-null result across all the given promises, rather than the
+// first to merely settle — a mirror returning null (failed) shouldn't "win" over one that's
+// still working. Resolves null only once every promise has resolved to nothing.
+function firstSuccessful(promises) {
+    return new Promise((resolve) => {
+        let remaining = promises.length;
+        promises.forEach((p) => {
+            p.then((value) => {
+                remaining -= 1;
+                if (value) resolve(value);
+                else if (remaining === 0) resolve(null);
+            });
+        });
+    });
+}
+
 async function fetchWholeStreetGeometry(name, [lat, lon]) {
     const safeName = name.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
     const query = `[out:json][timeout:15];way["name"="${safeName}"]["highway"](around:${OVERPASS_SEARCH_RADIUS_METERS},${lat},${lon});out geom;`;
 
-    let data = null;
-    for (const endpoint of OVERPASS_ENDPOINTS) {
-        data = await queryOverpass(endpoint, query);
-        if (data) break;
-    }
+    const data = await firstSuccessful(OVERPASS_ENDPOINTS.map((endpoint) => queryOverpass(endpoint, query)));
     if (!data) return null;
 
     const ways = (data.elements || []).filter(
@@ -351,27 +359,28 @@ export function StreetSearch({ onSelect, placeholder = "Search for a street in I
         debounceRef.current = setTimeout(() => runSearch(value), LIVE_SEARCH_DEBOUNCE_MS);
     };
 
-    const handleSelect = async (result) => {
+    const handleSelect = (result) => {
         const label = result.display_name.split(",")[0];
         const position = [parseFloat(result.lat), parseFloat(result.lon)];
         setQuery(label);
         setShowResults(false);
         if (debounceRef.current) clearTimeout(debounceRef.current);
 
-        let geometry = result.geojson || null;
+        // Select immediately with whatever Nominatim already gave us — don't make the
+        // volunteer wait on Overpass before the map/street even responds to their click.
+        onSelect({ position, label, geometry: result.geojson || null });
+
         if (includeGeometry) {
             setResolvingGeometry(true);
-            try {
-                const wholeStreet = await fetchWholeStreetGeometry(label, position);
-                if (wholeStreet) geometry = wholeStreet;
-            } catch {
-                // Overpass failed/timed out — fall back to Nominatim's single-segment geometry.
-            } finally {
-                setResolvingGeometry(false);
-            }
+            fetchWholeStreetGeometry(label, position)
+                .then((wholeStreet) => {
+                    if (wholeStreet) onSelect({ position, label, geometry: wholeStreet });
+                })
+                .catch(() => {
+                    // Overpass failed/timed out — the single-segment geometry already selected stands.
+                })
+                .finally(() => setResolvingGeometry(false));
         }
-
-        onSelect({ position, label, geometry });
     };
 
     return (
